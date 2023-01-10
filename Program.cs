@@ -6,46 +6,129 @@ using System.Drawing.Imaging;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-(Bitmap bmp, float[] img) morfology((Bitmap bmp, float[] img) t, float[] kernel, bool eroson = true)
+(Bitmap bmp, float[] img) sobel(
+    (Bitmap bmp, float[] img) t)
 {
-    if (MathF.Sqrt(kernel.Length) % 1 != 0)
+    int wid = t.bmp.Width,
+        hei = t.bmp.Height;
+
+    float[] _img = t.img,
+        result = new float[_img.Length];
+
+    float sum = 2 * _img[wid] + _img[wid + 1];
+        
+    for (int j = 1; j < hei - 1; j++)
+    {
+        for (int i = 1; i < wid - 1; i++)
+        {
+            sum += _img[i + j * wid + 1];
+            sum -= _img[i + j * wid - 1];
+
+            result[i + j * wid] = sum + _img[i + j * wid];
+        }
+    }
+
+    float flag = _img[wid] + _img[wid + 1];
+
+    for (int j = 1; j < hei - 1; j++)
+    {
+        for (int i = 1; i < wid - 1; i++)
+        {
+            float value = result[i + j * wid] + result[i + j * wid + 1];
+
+            var sla = value - flag;
+            if (sla > 1f)
+                sla = 1f;
+            else if (sla < 0f)
+                sla = 0;
+
+            result[i + j * wid] = sla;
+
+            flag = value;
+        }
+    }
+
+    var imgBytes = discretGray(result);
+    img(t.bmp, imgBytes);
+
+    return (t.bmp, result);
+}
+
+(Bitmap bmp, float[] img) conv(
+    (Bitmap bmp, float[] img) t, float[] kernel)
+{
+    var N = (int)Math.Sqrt(kernel.Length);
+    var wid = t.bmp.Width;
+    var hei = t.bmp.Height;
+    var _img = t.img;
+    float[] result = new float[_img.Length];
+
+    for (int j = N / 2; j < hei - N / 2; j++)
+    {
+        for (int i = N /2; i < wid - N / 2; i++)
+        {
+            float sum = 0;
+
+            for (int k = 0; k < N; k++)
+            {
+                for (int l = 0; l < N; l++)
+                {
+                    sum += _img[i + k +(j + l) * wid] *
+                        kernel[k + l * N];
+                }
+            }
+
+            result[i + j * wid] = sum;
+        }
+    }
+
+    var imgBytes = discretGray(result);
+    img(t.bmp, imgBytes);
+
+    return (t.bmp, result);
+}
+
+(Bitmap bmp, float[] img) morfology((Bitmap bmp, float[] img) t, float[] kernel, bool erosion = true)
+{
+    int N = (int)MathF.Sqrt(kernel.Length),
+        mid = N / 2;
+    
+    if (N % 1 != 0 || N % 2 == 0)
         throw new InvalidParameterSizeException();
     
-    int kernelLength = (int)MathF.Sqrt(kernel.Length),
-        midKernel = kernelLength / 2;
-    
     float[] originalImg = t.img,
-            newImg = new float[t.img.Length];
+            result = new float[t.img.Length];
 
-    for (int i = 0; i < newImg.Length; i++)
+    for (int i = 0; i < result.Length; i++)
     {
-        bool match = eroson;
-        int imgX = i % t.bmp.Width,
-            imgY = i / t.bmp.Width;
+        bool match = erosion;
+        int x = i % t.bmp.Width,
+            y = i / t.bmp.Width;
         
         for (int j = 0; j < kernel.Length; j++)
         {
             if (kernel[j] == 0f)
                 continue;
             
-            int kernelX = j % kernelLength,
-                kernelY = j / kernelLength;
+            int kX = j % N,
+                kY = j / N;
 
-            int target = (imgX + kernelX - midKernel) + (imgY + kernelY - midKernel) * t.bmp.Width;
+            int target = (x + kX - mid) + (y + kY - mid) * t.bmp.Width;
             
             if (target < 0 || target >= t.img.Length)
                 continue;
 
-            if (eroson) match &= originalImg[target] == 0f;
+            if (erosion) match &= originalImg[target] == 0f;
             else match |= originalImg[target] == 0f;
         }
 
-        newImg[i] = match ? 0f : 1f;
+        result[i] = match ? 0f : 1f;
     }
 
-    var imgBytes = discretGray(newImg);
+    var imgBytes = discretGray(result);
     img(t.bmp, imgBytes);
-    return (t.bmp, newImg);
+
+    return (t.bmp, result);
 }
 
 List<Rectangle> segmentation((Bitmap bmp, float[] img) t)
@@ -442,33 +525,39 @@ void showRects((Bitmap bmp, float[] img) t, List<Rectangle> list)
     showBmp(t.bmp);
 }
 
-var image = open("facil.jpeg");
-otsu(image);
-image = morfology(image, new float[]
-{
-    1f, 1f, 1f, 1f, 1f,
-    1f, 1f, 1f, 1f, 1f,
-    1f, 1f, 1f, 1f, 1f,
-    1f, 1f, 1f, 1f, 1f,
-    1f, 1f, 1f, 1f, 1f
-}, true);
+var image = open("shuregui.png");
+image = sobel(image);
+show(image);
+
+// image = conv(image, new float[]
+// {
+//     0.2f, 0.2f, 0.1f, 0.1f, 0.1f
+// });
+
+// otsu(image);
 // image = morfology(image, new float[]
 // {
+//     1f, 1f, 0f,
 //     1f, 1f, 1f,
-//     1f, 1f, 1f,
-//     1f, 1f, 1f
+//     0f, 1f, 0f
 // }, true);
-// image = morfology(image, new float[]
-// {
-//     1f, 1f, 1f,
-//     1f, 1f, 1f,
-//     1f, 1f, 1f
-// }, false);
-// image = morfology(image, new float[]
-// {
-//     1f, 1f, 1f,
-//     1f, 1f, 1f,
-//     1f, 1f, 1f
-// }, false);
-var rects = segmentationT(image, 50);
-showRects(image, rects);
+// // image = morfology(image, new float[]
+// // {
+// //     1f, 1f, 1f,
+// //     1f, 1f, 1f,
+// //     1f, 1f, 1f
+// // }, true);
+// // image = morfology(image, new float[]
+// // {
+// //     1f, 1f, 1f,
+// //     1f, 1f, 1f,
+// //     1f, 1f, 1f
+// // }, false);
+// // image = morfology(image, new float[]
+// // {
+// //     1f, 1f, 1f,
+// //     1f, 1f, 1f,
+// //     1f, 1f, 1f
+// // }, false);
+// var rects = segmentationT(image, 50);
+// showRects(image, rects);

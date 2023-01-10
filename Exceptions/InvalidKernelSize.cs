@@ -8,5 +8,5 @@ public class InvalidParameterSizeException : System.Exception
         System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 
     public override string Message
-        => "The kernel needs to have a quadratic size";
+        => "The kernel must be of quadratic size and have a center";
 }
