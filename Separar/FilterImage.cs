@@ -1,6 +1,6 @@
 using System;
 using System.Drawing;
-
+using System.Numerics;
 public static class FilterImage
 {
     public static (Bitmap bmp, float[] img) Sobel(
