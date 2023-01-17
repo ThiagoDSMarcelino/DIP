@@ -1,13 +1,21 @@
 using System;
 using System.Linq;
 using System.Drawing;
+using System.Numerics;
 
 public static class TranformImage
 {
     public static (Bitmap bmp, float[] img) Affine(
         (Bitmap bmp, float[] img) t,
-        params float[] p)
+        Matrix4x4 mat)
     {
+        float[] p = new float[]
+        {
+            mat.M11, mat.M12, mat.M13,
+            mat.M21, mat.M22, mat.M23,
+            mat.M31, mat.M32, mat.M33,
+        };
+        
         if (p.Length == 6)
             p = p.Concat(new float[] { 0f, 0f, 1f }).ToArray();
         else if (p.Length != 9)

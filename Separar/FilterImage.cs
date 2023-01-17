@@ -54,7 +54,7 @@ public static class FilterImage
     }
 
     public static (Bitmap bmp, float[] img) Conv(
-        (Bitmap bmp, float[] img) t, float[] kernel)
+        (Bitmap bmp, float[] img) t, params float[] kernel)
     {
         var N = (int)Math.Sqrt(kernel.Length);
         var wid = t.bmp.Width;
@@ -72,7 +72,7 @@ public static class FilterImage
                 {
                     for (int l = 0; l < N; l++)
                     {
-                        sum += _img[i + k +(j + l) * wid] *
+                        sum += _img[i + k - (N / 2) + (j + l - (N / 2)) * wid] *
                             kernel[k + l * N];
                     }
                 }

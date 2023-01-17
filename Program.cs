@@ -2,11 +2,51 @@ using System;
 using System.Drawing;
 using System.Numerics;
 
-var image = ImageTranform.Open("sla.png");
-image = Hough(image);
-// image = ScaleImg(image, 3f, 3f);
+
+var image = ImageTranform.Open("planta.jpg");
+var kmeans = new K_means();
+var byteArray = ImageTranform.Bytes(image.bmp);
+var colorsArray = new Color[byteArray.Length / 3];
+
+for (int i = 0; i < byteArray.Length; i+=3)
+    colorsArray[i/3] = new Color(byteArray[i], byteArray[i+1], byteArray[i+2]);
+kmeans.Fit(colorsArray);
+
+var newImage = kmeans.CompressImage(image.bmp);
+
+// newImage.Save("banana.bmp");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// var image = ImageTranform.Open("sla.png");
+// HistData.Otsu(image);
+// image = FilterImage.Conv(image, 
+//     1, 0, -1,
+//     2, 0, -2,
+//     1, 0, -1);
+// image = TranformImage.Affine(image,
+//     translateFromSize(0.5f, 0.5f, image) *
+//     rotation(45f) *
+//     translateFromSize(-0.5f, -0.5f, image));
 // image = Bilinear(image);
-ImageTranform.Show(image);
+// HistData.Otsu(image);
+// image = Hough(image);
+// HistData.Equalization(image);
+// ImageTranform.Show(image);
 
 (Bitmap bmp, float[] img) Hough((Bitmap bmp, float[] img) t)
 {
