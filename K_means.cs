@@ -24,7 +24,7 @@ public class K_means
         while (change > 5)
             change = epoch(target);
     }
-    private int epoch(Color[] target)
+    private int epoch(Color[] target) // TODO
     {
         long[] counts = new long[this.colorPalette.Length],
                blues = new long[this.colorPalette.Length],
